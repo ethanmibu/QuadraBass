@@ -50,8 +50,7 @@ void QuadraBassAudioProcessorEditor::paint(juce::Graphics& g) {
     g.drawRoundedRectangle(bounds.toFloat(), 8.0f, 1.5f);
 
     g.setColour(juce::Colour::fromRGB(89, 174, 255));
-    g.drawLine(static_cast<float>(bounds.getX() + 20), 88.0f, static_cast<float>(bounds.getRight() - 20), 88.0f,
-               1.5f);
+    g.drawLine(static_cast<float>(bounds.getX() + 20), 88.0f, static_cast<float>(bounds.getRight() - 20), 88.0f, 1.5f);
 }
 
 void QuadraBassAudioProcessorEditor::resized() {

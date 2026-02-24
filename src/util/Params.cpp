@@ -41,24 +41,22 @@ juce::AudioProcessorValueTreeState::ParameterLayout Params::createLayout() {
 
     juce::NormalisableRange<float> crossoverRange(20.0f, 500.0f, 0.01f);
     crossoverRange.setSkewForCentre(100.0f);
-    parameters.push_back(std::make_unique<juce::AudioParameterFloat>(
-        juce::ParameterID(IDs::crossoverHz, 1), "Crossover", crossoverRange, 90.0f));
+    parameters.push_back(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID(IDs::crossoverHz, 1),
+                                                                     "Crossover", crossoverRange, 90.0f));
 
     parameters.push_back(std::make_unique<juce::AudioParameterFloat>(
-        juce::ParameterID(IDs::widthPercent, 1), "Width",
-        juce::NormalisableRange<float>(0.0f, 100.0f, 0.01f), 100.0f));
+        juce::ParameterID(IDs::widthPercent, 1), "Width", juce::NormalisableRange<float>(0.0f, 100.0f, 0.01f), 100.0f));
+
+    parameters.push_back(
+        std::make_unique<juce::AudioParameterFloat>(juce::ParameterID(IDs::phaseAngleDeg, 1), "Phase Angle",
+                                                    juce::NormalisableRange<float>(0.0f, 180.0f, 0.01f), 90.0f));
+
+    parameters.push_back(
+        std::make_unique<juce::AudioParameterFloat>(juce::ParameterID(IDs::phaseRotationDeg, 1), "Phase Rotation",
+                                                    juce::NormalisableRange<float>(-180.0f, 180.0f, 0.01f), 0.0f));
 
     parameters.push_back(std::make_unique<juce::AudioParameterFloat>(
-        juce::ParameterID(IDs::phaseAngleDeg, 1), "Phase Angle",
-        juce::NormalisableRange<float>(0.0f, 180.0f, 0.01f), 90.0f));
-
-    parameters.push_back(std::make_unique<juce::AudioParameterFloat>(
-        juce::ParameterID(IDs::phaseRotationDeg, 1), "Phase Rotation",
-        juce::NormalisableRange<float>(-180.0f, 180.0f, 0.01f), 0.0f));
-
-    parameters.push_back(std::make_unique<juce::AudioParameterFloat>(
-        juce::ParameterID(IDs::outputGainDb, 1), "Gain", juce::NormalisableRange<float>(-60.0f, 12.0f, 0.01f),
-        0.0f));
+        juce::ParameterID(IDs::outputGainDb, 1), "Gain", juce::NormalisableRange<float>(-60.0f, 12.0f, 0.01f), 0.0f));
 
     return {parameters.begin(), parameters.end()};
 }

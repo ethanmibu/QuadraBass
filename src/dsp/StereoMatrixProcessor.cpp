@@ -6,8 +6,7 @@ void StereoMatrixProcessor::prepare(const juce::dsp::ProcessSpec& spec) {
     spec_ = spec;
 }
 
-void StereoMatrixProcessor::reset() noexcept {
-}
+void StereoMatrixProcessor::reset() noexcept {}
 
 void StereoMatrixProcessor::process(const juce::AudioBuffer<float>& iBuffer, const juce::AudioBuffer<float>& qBuffer,
                                     juce::AudioBuffer<float>& outputBuffer, float widthPercent,

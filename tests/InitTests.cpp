@@ -55,8 +55,8 @@ bool testParameterIdsExist() {
     ok &= expect(params.apvts.getParameter(util::Params::IDs::crossoverHz) != nullptr, "Missing crossover_hz");
     ok &= expect(params.apvts.getParameter(util::Params::IDs::widthPercent) != nullptr, "Missing width_percent");
     ok &= expect(params.apvts.getParameter(util::Params::IDs::phaseAngleDeg) != nullptr, "Missing phase_angle_deg");
-    ok &= expect(params.apvts.getParameter(util::Params::IDs::phaseRotationDeg) != nullptr,
-                 "Missing phase_rotation_deg");
+    ok &=
+        expect(params.apvts.getParameter(util::Params::IDs::phaseRotationDeg) != nullptr, "Missing phase_rotation_deg");
     ok &= expect(params.apvts.getParameter(util::Params::IDs::outputGainDb) != nullptr, "Missing output_gain_db");
     return ok;
 }
