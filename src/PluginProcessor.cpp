@@ -64,9 +64,20 @@ void QuadraBassAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBl
     outputGain_.prepare(processSpec_);
     outputGain_.setRampDurationSeconds(0.02);
     outputGain_.setGainDecibels(params_.getOutputGainDb());
+
+    bandSplit_.prepare(processSpec_);
+    hilbert_.prepare(processSpec_);
+    stereoMatrix_.prepare(processSpec_);
+
+    const int bufferSize = juce::jmax(1, samplesPerBlock);
+    monoBuffer_.setSize(1, bufferSize, false, true, true);
+    qBuffer_.setSize(1, bufferSize, false, true, true);
 }
 
 void QuadraBassAudioProcessor::releaseResources() {
+    bandSplit_.reset();
+    hilbert_.reset();
+    stereoMatrix_.reset();
 }
 
 #if !JucePlugin_PreferredChannelConfigurations
@@ -92,9 +103,27 @@ void QuadraBassAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, ju
 
     const int totalNumInputChannels = getTotalNumInputChannels();
     const int totalNumOutputChannels = getTotalNumOutputChannels();
+    const int samples = buffer.getNumSamples();
 
     for (int channel = totalNumInputChannels; channel < totalNumOutputChannels; ++channel)
         buffer.clear(channel, 0, buffer.getNumSamples());
+
+    if (totalNumInputChannels <= 0 || samples <= 0)
+        return;
+
+    monoBuffer_.setSize(1, samples, false, false, true);
+    qBuffer_.setSize(1, samples, false, false, true);
+
+    float* monoData = monoBuffer_.getWritePointer(0);
+    juce::FloatVectorOperations::clear(monoData, samples);
+
+    const float mixScale = 1.0f / static_cast<float>(totalNumInputChannels);
+    for (int channel = 0; channel < totalNumInputChannels; ++channel)
+        juce::FloatVectorOperations::addWithMultiply(monoData, buffer.getReadPointer(channel), mixScale, samples);
+
+    bandSplit_.process(monoBuffer_, params_.getCrossoverHz());
+    hilbert_.process(monoBuffer_, qBuffer_, params_.getPhaseAngleDeg());
+    stereoMatrix_.process(monoBuffer_, qBuffer_, buffer, params_.getWidthPercent(), params_.getPhaseRotationDeg());
 
     outputGain_.setGainDecibels(params_.getOutputGainDb());
     juce::dsp::AudioBlock<float> block(buffer);

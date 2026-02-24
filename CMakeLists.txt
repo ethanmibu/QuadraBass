@@ -68,6 +68,14 @@ target_sources(QuadraBass PRIVATE
     src/PluginEditor.h
     src/util/Params.cpp
     src/util/Params.h
+    src/dsp/BandSplitProcessor.cpp
+    src/dsp/BandSplitProcessor.h
+    src/dsp/HilbertProcessor.cpp
+    src/dsp/HilbertProcessor.h
+    src/dsp/StereoMatrixProcessor.cpp
+    src/dsp/StereoMatrixProcessor.h
+    src/ui/StereometerComponent.cpp
+    src/ui/StereometerComponent.h
 )
 
 target_include_directories(QuadraBass PRIVATE

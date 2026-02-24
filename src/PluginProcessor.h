@@ -1,5 +1,8 @@
 #pragma once
 
+#include "dsp/BandSplitProcessor.h"
+#include "dsp/HilbertProcessor.h"
+#include "dsp/StereoMatrixProcessor.h"
 #include "util/Params.h"
 #include <JuceHeader.h>
 
@@ -41,6 +44,11 @@ class QuadraBassAudioProcessor final : public juce::AudioProcessor {
 
   private:
     util::Params params_;
+    dsp::BandSplitProcessor bandSplit_;
+    dsp::HilbertProcessor hilbert_;
+    dsp::StereoMatrixProcessor stereoMatrix_;
+    juce::AudioBuffer<float> monoBuffer_;
+    juce::AudioBuffer<float> qBuffer_;
     juce::dsp::Gain<float> outputGain_;
     juce::dsp::ProcessSpec processSpec_{};
 
