@@ -101,3 +101,31 @@ juce_generate_juce_header(QuadraBass)
 
 include(CTest)
 set(CTEST_OUTPUT_ON_FAILURE ON)
+
+if (BUILD_TESTING)
+    add_executable(quadrabass_tests
+        tests/InitTests.cpp
+        src/util/Params.cpp
+        src/util/Params.h
+    )
+
+    target_include_directories(quadrabass_tests PRIVATE
+        src
+    )
+
+    target_compile_definitions(quadrabass_tests PRIVATE
+        JUCE_WEB_BROWSER=0
+        JUCE_USE_CURL=0
+        JUCE_VST3_CAN_REPLACE_VST2=0
+    )
+
+    target_link_libraries(quadrabass_tests PRIVATE
+        juce::juce_audio_processors
+
+        juce::juce_recommended_config_flags
+        juce::juce_recommended_lto_flags
+        juce::juce_recommended_warning_flags
+    )
+
+    add_test(NAME init_tests COMMAND quadrabass_tests)
+endif()
