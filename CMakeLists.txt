@@ -20,16 +20,9 @@ if (DEFINED ZL_JUCE_COPY_PLUGIN)
 endif()
 
 if (APPLE)
-    set(QUADRABASS_DEFAULT_PLUGIN_FORMATS "AU;VST3")
+    set(QUADRABASS_PLUGIN_FORMATS "AU;VST3" CACHE STRING "Phase 2 enforced formats" FORCE)
 else()
-    set(QUADRABASS_DEFAULT_PLUGIN_FORMATS "VST3")
-endif()
-
-if (DEFINED ZL_JUCE_FORMATS)
-    set(QUADRABASS_PLUGIN_FORMATS "${ZL_JUCE_FORMATS}")
-else()
-    set(QUADRABASS_PLUGIN_FORMATS "${QUADRABASS_DEFAULT_PLUGIN_FORMATS}" CACHE STRING
-        "Semicolon-separated JUCE plugin formats to build")
+    set(QUADRABASS_PLUGIN_FORMATS "VST3" CACHE STRING "Phase 2 enforced formats" FORCE)
 endif()
 message(STATUS "Formats are ${QUADRABASS_PLUGIN_FORMATS}")
 
@@ -103,29 +96,34 @@ include(CTest)
 set(CTEST_OUTPUT_ON_FAILURE ON)
 
 if (BUILD_TESTING)
-    add_executable(quadrabass_tests
-        tests/InitTests.cpp
-        src/util/Params.cpp
-        src/util/Params.h
-    )
+    add_custom_target(quadrabass_tests)
 
-    target_include_directories(quadrabass_tests PRIVATE
-        src
-    )
+    macro(add_qb_test test_name src_file)
+        add_executable(${test_name}
+            ${src_file}
+            src/util/Params.cpp
+            src/util/Params.h
+        )
 
-    target_compile_definitions(quadrabass_tests PRIVATE
-        JUCE_WEB_BROWSER=0
-        JUCE_USE_CURL=0
-        JUCE_VST3_CAN_REPLACE_VST2=0
-    )
+        target_include_directories(${test_name} PRIVATE src)
 
-    target_link_libraries(quadrabass_tests PRIVATE
-        juce::juce_audio_processors
+        target_compile_definitions(${test_name} PRIVATE
+            JUCE_WEB_BROWSER=0
+            JUCE_USE_CURL=0
+            JUCE_VST3_CAN_REPLACE_VST2=0
+        )
 
-        juce::juce_recommended_config_flags
-        juce::juce_recommended_lto_flags
-        juce::juce_recommended_warning_flags
-    )
+        target_link_libraries(${test_name} PRIVATE
+            juce::juce_audio_processors
+            juce::juce_recommended_config_flags
+            juce::juce_recommended_lto_flags
+            juce::juce_recommended_warning_flags
+        )
 
-    add_test(NAME init_tests COMMAND quadrabass_tests)
+        add_test(NAME ${test_name} COMMAND ${test_name})
+        add_dependencies(quadrabass_tests ${test_name})
+    endmacro()
+
+    add_qb_test(InitTests tests/InitTests.cpp)
+    add_qb_test(ParamLayout tests/ParamLayoutTests.cpp)
 endif()

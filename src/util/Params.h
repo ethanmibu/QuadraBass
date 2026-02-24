@@ -8,6 +8,7 @@ namespace util {
 class Params final {
   public:
     struct IDs {
+        static constexpr const char* crossoverEnabled = "crossover_enabled";
         static constexpr const char* crossoverHz = "crossover_hz";
         static constexpr const char* widthPercent = "width_percent";
         static constexpr const char* phaseAngleDeg = "phase_angle_deg";
@@ -19,6 +20,7 @@ class Params final {
 
     juce::AudioProcessorValueTreeState apvts;
 
+    bool getCrossoverEnabled() const noexcept;
     float getCrossoverHz() const noexcept;
     float getWidthPercent() const noexcept;
     float getPhaseAngleDeg() const noexcept;
@@ -28,6 +30,7 @@ class Params final {
     static juce::AudioProcessorValueTreeState::ParameterLayout createLayout();
 
   private:
+    std::atomic<float>* crossoverEnabled_ = nullptr;
     std::atomic<float>* crossoverHz_ = nullptr;
     std::atomic<float>* widthPercent_ = nullptr;
     std::atomic<float>* phaseAngleDeg_ = nullptr;
