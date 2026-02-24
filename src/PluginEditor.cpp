@@ -2,7 +2,7 @@
 #include "util/Params.h"
 
 QuadraBassAudioProcessorEditor::QuadraBassAudioProcessorEditor(QuadraBassAudioProcessor& processor)
-    : AudioProcessorEditor(&processor), audioProcessor_(processor) {
+    : AudioProcessorEditor(processor), audioProcessor_(processor) {
     title_.setText("QuadraBass", juce::dontSendNotification);
     title_.setJustificationType(juce::Justification::centredLeft);
     title_.setFont(juce::Font(28.0f, juce::Font::bold));

@@ -1,6 +1,6 @@
 #include "StereoMatrixProcessor.h"
 
-namespace dsp {
+namespace qbdsp {
 
 void StereoMatrixProcessor::prepare(const juce::dsp::ProcessSpec& spec) {
     spec_ = spec;
@@ -37,4 +37,4 @@ void StereoMatrixProcessor::process(const juce::AudioBuffer<float>& iBuffer, con
         outputBuffer.clear(ch, 0, samples);
 }
 
-} // namespace dsp
+} // namespace qbdsp

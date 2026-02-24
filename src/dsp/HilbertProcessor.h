@@ -2,7 +2,7 @@
 
 #include <JuceHeader.h>
 
-namespace dsp {
+namespace qbdsp {
 
 class HilbertProcessor final {
   public:
@@ -14,4 +14,4 @@ class HilbertProcessor final {
     juce::dsp::ProcessSpec spec_{};
 };
 
-} // namespace dsp
+} // namespace qbdsp

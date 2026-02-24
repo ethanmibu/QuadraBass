@@ -2,7 +2,7 @@
 
 #include <JuceHeader.h>
 
-namespace dsp {
+namespace qbdsp {
 
 class StereoMatrixProcessor final {
   public:
@@ -15,4 +15,4 @@ class StereoMatrixProcessor final {
     juce::dsp::ProcessSpec spec_{};
 };
 
-} // namespace dsp
+} // namespace qbdsp

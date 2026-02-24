@@ -1,6 +1,6 @@
 #include "HilbertProcessor.h"
 
-namespace dsp {
+namespace qbdsp {
 
 void HilbertProcessor::prepare(const juce::dsp::ProcessSpec& spec) {
     spec_ = spec;
@@ -15,4 +15,4 @@ void HilbertProcessor::process(const juce::AudioBuffer<float>& iBuffer, juce::Au
     qBuffer.makeCopyOf(iBuffer, true);
 }
 
-} // namespace dsp
+} // namespace qbdsp

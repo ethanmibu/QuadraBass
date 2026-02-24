@@ -1,6 +1,6 @@
 #include "BandSplitProcessor.h"
 
-namespace dsp {
+namespace qbdsp {
 
 void BandSplitProcessor::prepare(const juce::dsp::ProcessSpec& spec) {
     spec_ = spec;
@@ -14,4 +14,4 @@ void BandSplitProcessor::process(juce::AudioBuffer<float>& monoBuffer, float cro
     // Placeholder: final Linkwitz-Riley split will be added in later milestones.
 }
 
-} // namespace dsp
+} // namespace qbdsp
