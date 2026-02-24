@@ -8,8 +8,8 @@ Repository initialization scaffold. DSP and UI are placeholders pending implemen
 
 ## Target Formats
 
-- macOS: AU, VST3, Standalone
-- Windows: VST3, Standalone
+- macOS: AU, VST3
+- Windows: VST3
 
 ## Prerequisites
 
@@ -30,7 +30,7 @@ Repository initialization scaffold. DSP and UI are placeholders pending implemen
 ## Clone + JUCE Setup
 
 ```bash
-git clone <repo-url>
+git clone https://github.com/ethanmibu/QuadraBass.git
 cd QuadraBass
 git submodule update --init --recursive
 ```

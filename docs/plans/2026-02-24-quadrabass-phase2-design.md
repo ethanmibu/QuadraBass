@@ -167,5 +167,5 @@ Windowed Pearson-style estimate:
 ## 8. Out of Scope
 
 - FIR Hilbert mode and latency-switching UX.
-- Standalone target.
+- Additional plugin formats beyond AU/VST3.
 - Marketing language claiming absolute mono compatibility.

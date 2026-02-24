@@ -27,8 +27,8 @@ QuadraBass is a JUCE-based audio plugin project focused on mono-compatible stere
 - Build a JUCE + CMake plugin project named `QuadraBass`.
 - Add JUCE as a git submodule at `third_party/JUCE`.
 - Configure platform plugin formats:
-  - macOS: `AU`, `VST3`, `Standalone`
-  - Windows: `VST3`, `Standalone`
+  - macOS: `AU`, `VST3`
+  - Windows: `VST3`
 - Apply `AGPL-3.0` licensing.
 - Create and link GitHub repository: `ethanmibu/QuadraBass` (public).
 
