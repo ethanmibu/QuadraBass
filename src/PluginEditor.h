@@ -1,13 +1,14 @@
 #pragma once
 
 #include "PluginProcessor.h"
-#include "ui/StereometerComponent.h"
+#include "ui/CorrelationMeter.h"
+#include "ui/GoniometerComponent.h"
 #include <JuceHeader.h>
 
 class QuadraBassAudioProcessorEditor final : public juce::AudioProcessorEditor {
   public:
     explicit QuadraBassAudioProcessorEditor(QuadraBassAudioProcessor&);
-    ~QuadraBassAudioProcessorEditor() override = default;
+    ~QuadraBassAudioProcessorEditor() override;
 
     void paint(juce::Graphics&) override;
     void resized() override;
@@ -15,7 +16,8 @@ class QuadraBassAudioProcessorEditor final : public juce::AudioProcessorEditor {
   private:
     QuadraBassAudioProcessor& audioProcessor_;
     juce::Label title_;
-    ui::StereometerComponent stereometer_;
+    qbui::GoniometerComponent goniometer_;
+    qbui::CorrelationMeter correlationMeter_;
 
     juce::Slider crossoverSlider_;
     juce::Slider widthSlider_;

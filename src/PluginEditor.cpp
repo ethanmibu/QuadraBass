@@ -3,13 +3,17 @@
 
 QuadraBassAudioProcessorEditor::QuadraBassAudioProcessorEditor(QuadraBassAudioProcessor& processor)
     : AudioProcessorEditor(processor), audioProcessor_(processor) {
+
+    audioProcessor_.activeGoniometer_.store(&goniometer_, std::memory_order_relaxed);
+    audioProcessor_.activeCorrelationMeter_.store(&correlationMeter_, std::memory_order_relaxed);
+
     title_.setText("QuadraBass", juce::dontSendNotification);
     title_.setJustificationType(juce::Justification::centredLeft);
-    title_.setFont(juce::Font(28.0f, juce::Font::bold));
+    title_.setFont(juce::FontOptions(28.0f, juce::Font::bold));
     addAndMakeVisible(title_);
 
-    addAndMakeVisible(stereometer_);
-    stereometer_.setPurity(0.0f);
+    addAndMakeVisible(goniometer_);
+    addAndMakeVisible(correlationMeter_);
 
     auto setupSlider = [this](juce::Slider& slider, juce::Label& label, const juce::String& labelText) {
         slider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
@@ -42,6 +46,11 @@ QuadraBassAudioProcessorEditor::QuadraBassAudioProcessorEditor(QuadraBassAudioPr
     setSize(760, 420);
 }
 
+QuadraBassAudioProcessorEditor::~QuadraBassAudioProcessorEditor() {
+    audioProcessor_.activeGoniometer_.store(nullptr, std::memory_order_relaxed);
+    audioProcessor_.activeCorrelationMeter_.store(nullptr, std::memory_order_relaxed);
+}
+
 void QuadraBassAudioProcessorEditor::paint(juce::Graphics& g) {
     g.fillAll(juce::Colour::fromRGB(18, 21, 28));
 
@@ -59,7 +68,11 @@ void QuadraBassAudioProcessorEditor::resized() {
 
     auto topArea = bounds.withTop(98).withHeight(178);
     auto meterArea = topArea.removeFromLeft(240).reduced(8);
-    stereometer_.setBounds(meterArea);
+
+    // Split meterArea: Goniometer on left, Correlation on right
+    goniometer_.setBounds(meterArea.removeFromLeft(meterArea.getWidth() - 24));
+    meterArea.removeFromLeft(8); // spacing
+    correlationMeter_.setBounds(meterArea);
 
     auto knobsArea = topArea.reduced(6);
     const int knobWidth = knobsArea.getWidth() / 5;

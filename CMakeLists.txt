@@ -67,8 +67,10 @@ target_sources(QuadraBass PRIVATE
     src/dsp/HilbertQuadratureProcessor.h
     src/dsp/StereoMatrixProcessor.cpp
     src/dsp/StereoMatrixProcessor.h
-    src/ui/StereometerComponent.cpp
-    src/ui/StereometerComponent.h
+    src/ui/GoniometerComponent.cpp
+    src/ui/GoniometerComponent.h
+    src/ui/CorrelationMeter.cpp
+    src/ui/CorrelationMeter.h
 )
 
 target_include_directories(QuadraBass PRIVATE
@@ -129,4 +131,5 @@ if (BUILD_TESTING)
     add_qb_test(BandSplitProcessor tests/BandSplitProcessorTests.cpp src/dsp/BandSplitProcessor.cpp src/dsp/BandSplitProcessor.h)
     add_qb_test(HilbertQuadrature tests/HilbertQuadratureTests.cpp src/dsp/HilbertQuadratureProcessor.cpp src/dsp/HilbertQuadratureProcessor.h)
     add_qb_test(StereoMatrix tests/StereoMatrixTests.cpp src/dsp/StereoMatrixProcessor.cpp src/dsp/StereoMatrixProcessor.h)
+    add_qb_test(VisualizerMath tests/VisualizerMathTests.cpp src/ui/GoniometerComponent.cpp src/ui/GoniometerComponent.h src/ui/CorrelationMeter.cpp src/ui/CorrelationMeter.h)
 endif()
