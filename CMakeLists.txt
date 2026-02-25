@@ -63,8 +63,8 @@ target_sources(QuadraBass PRIVATE
     src/util/Params.h
     src/dsp/BandSplitProcessor.cpp
     src/dsp/BandSplitProcessor.h
-    src/dsp/HilbertProcessor.cpp
-    src/dsp/HilbertProcessor.h
+    src/dsp/HilbertQuadratureProcessor.cpp
+    src/dsp/HilbertQuadratureProcessor.h
     src/dsp/StereoMatrixProcessor.cpp
     src/dsp/StereoMatrixProcessor.h
     src/ui/StereometerComponent.cpp
@@ -127,4 +127,5 @@ if (BUILD_TESTING)
     add_qb_test(InitTests tests/InitTests.cpp src/util/Params.cpp src/util/Params.h)
     add_qb_test(ParamLayout tests/ParamLayoutTests.cpp src/util/Params.cpp src/util/Params.h)
     add_qb_test(BandSplitProcessor tests/BandSplitProcessorTests.cpp src/dsp/BandSplitProcessor.cpp src/dsp/BandSplitProcessor.h)
+    add_qb_test(HilbertQuadrature tests/HilbertQuadratureTests.cpp src/dsp/HilbertQuadratureProcessor.cpp src/dsp/HilbertQuadratureProcessor.h)
 endif()
