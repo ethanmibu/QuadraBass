@@ -71,6 +71,9 @@ void QuadraBassAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBl
 
     const int bufferSize = juce::jmax(1, samplesPerBlock);
     monoBuffer_.setSize(1, bufferSize, false, true, true);
+    lowBuffer_.setSize(1, bufferSize, false, true, true);
+    xHighBuffer_.setSize(1, bufferSize, false, true, true);
+    highBuffer_.setSize(1, bufferSize, false, true, true);
     qBuffer_.setSize(1, bufferSize, false, true, true);
 }
 
@@ -112,6 +115,9 @@ void QuadraBassAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, ju
         return;
 
     monoBuffer_.setSize(1, samples, false, false, true);
+    lowBuffer_.setSize(1, samples, false, false, true);
+    xHighBuffer_.setSize(1, samples, false, false, true);
+    highBuffer_.setSize(1, samples, false, false, true);
     qBuffer_.setSize(1, samples, false, false, true);
 
     float* monoData = monoBuffer_.getWritePointer(0);
@@ -121,9 +127,12 @@ void QuadraBassAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, ju
     for (int channel = 0; channel < totalNumInputChannels; ++channel)
         juce::FloatVectorOperations::addWithMultiply(monoData, buffer.getReadPointer(channel), mixScale, samples);
 
-    bandSplit_.process(monoBuffer_, params_.getCrossoverHz());
-    hilbert_.process(monoBuffer_, qBuffer_, params_.getPhaseAngleDeg());
-    stereoMatrix_.process(monoBuffer_, qBuffer_, buffer, params_.getWidthPercent(), params_.getPhaseRotationDeg());
+    bandSplit_.process(monoBuffer_, lowBuffer_, highBuffer_, params_.getCrossoverHz(), params_.getCrossoverEnabled());
+
+    xHighBuffer_.copyFrom(0, 0, highBuffer_, 0, 0, samples);
+    hilbert_.process(highBuffer_, qBuffer_, params_.getPhaseAngleDeg());
+    stereoMatrix_.process(lowBuffer_, xHighBuffer_, highBuffer_, qBuffer_, buffer, params_.getWidthPercent(),
+                          params_.getPhaseAngleDeg(), params_.getPhaseRotationDeg());
 
     outputGain_.setGainDecibels(params_.getOutputGainDb());
     juce::dsp::AudioBlock<float> block(buffer);

@@ -48,6 +48,9 @@ class QuadraBassAudioProcessor final : public juce::AudioProcessor {
     qbdsp::HilbertQuadratureProcessor hilbert_;
     qbdsp::StereoMatrixProcessor stereoMatrix_;
     juce::AudioBuffer<float> monoBuffer_;
+    juce::AudioBuffer<float> lowBuffer_;
+    juce::AudioBuffer<float> xHighBuffer_;
+    juce::AudioBuffer<float> highBuffer_;
     juce::AudioBuffer<float> qBuffer_;
     juce::dsp::Gain<float> outputGain_;
     juce::dsp::ProcessSpec processSpec_{};
