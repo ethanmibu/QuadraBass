@@ -1,6 +1,8 @@
 #include "../src/PluginProcessor.h"
+#include <algorithm>
 #include <cmath>
 #include <iostream>
+#include <limits>
 
 namespace {
 
@@ -18,10 +20,7 @@ bool testStereoFolddown() {
     // Set 100% width
     auto* widthParam = dynamic_cast<juce::AudioParameterFloat*>(
         processor.params().apvts.getParameter(util::Params::IDs::widthPercent));
-    auto* crossoverEn = dynamic_cast<juce::AudioParameterBool*>(
-        processor.params().apvts.getParameter(util::Params::IDs::crossoverEnabled));
     *widthParam = 100.0f;
-    *crossoverEn = false;
 
     juce::AudioBuffer<float> buffer(2, 4800);
 
@@ -59,26 +58,17 @@ bool testStereoFolddown() {
     return ok;
 }
 
-bool testLowBandMonoIntegrity() {
+float measureStereoSpread(float freqHz, float widthPercent) {
     QuadraBassAudioProcessor processor;
-    processor.prepareToPlay(48000.0, 512);
+    processor.prepareToPlay(48000.0, 2048);
 
     auto* widthParam = dynamic_cast<juce::AudioParameterFloat*>(
         processor.params().apvts.getParameter(util::Params::IDs::widthPercent));
-    auto* crossoverEn = dynamic_cast<juce::AudioParameterBool*>(
-        processor.params().apvts.getParameter(util::Params::IDs::crossoverEnabled));
-    auto* crossoverHz =
-        dynamic_cast<juce::AudioParameterFloat*>(processor.params().apvts.getParameter(util::Params::IDs::crossoverHz));
-    *widthParam = 100.0f;
-    *crossoverEn = true;
-    *crossoverHz = 90.0f;
-    // The default is already 90Hz which is tested here
+    *widthParam = widthPercent;
 
-    juce::AudioBuffer<float> buffer(2, 512);
-
-    // Inject 40 Hz which is well below crossover (90 Hz)
-    for (int i = 0; i < 512; ++i) {
-        float val = std::sin(2.0f * 3.14159f * 40.0f * i / 48000.0f);
+    juce::AudioBuffer<float> buffer(2, 2048);
+    for (int i = 0; i < 2048; ++i) {
+        float val = std::sin(2.0f * 3.14159f * freqHz * i / 48000.0f);
         buffer.setSample(0, i, val);
         buffer.setSample(1, i, val);
     }
@@ -86,17 +76,99 @@ bool testLowBandMonoIntegrity() {
     juce::MidiBuffer midi;
     processor.processBlock(buffer, midi);
 
-    // At 40Hz, the signal should remain pure mono even with width 100%
-    float maxDiff = 0.0f;
+    float inputSumSq = 0.0f;
+    float diffSumSq = 0.0f;
     auto* L = buffer.getReadPointer(0);
     auto* R = buffer.getReadPointer(1);
-    for (int i = 0; i < 512; ++i) {
-        maxDiff = std::max(maxDiff, std::abs(L[i] - R[i]));
+    for (int i = 0; i < 2048; ++i) {
+        float input = std::sin(2.0f * 3.14159f * freqHz * i / 48000.0f);
+        inputSumSq += input * input;
+        float d = L[i] - R[i];
+        diffSumSq += d * d;
+    }
+    const float inputRms = std::sqrt(inputSumSq / 2048.0f);
+    const float spreadRms = std::sqrt(diffSumSq / 2048.0f);
+    return inputRms > 1.0e-6f ? spreadRms / inputRms : 0.0f;
+}
+
+bool testWidthZeroIsMonoAcrossBand() {
+    bool ok = true;
+    for (float freq : {30.0f, 120.0f, 1000.0f, 10000.0f}) {
+        const float spread = measureStereoSpread(freq, 0.0f);
+        ok &= expect(spread < 1.0e-3f, "Width 0 should remain mono. Freq=" + std::to_string(freq));
+    }
+    return ok;
+}
+
+bool testWidthConsistencyAcrossFrequencies() {
+    bool ok = true;
+    float minSpread = std::numeric_limits<float>::max();
+    float maxSpread = 0.0f;
+
+    for (float freq : {40.0f, 120.0f, 500.0f, 1000.0f, 3000.0f, 8000.0f}) {
+        const float spread = measureStereoSpread(freq, 100.0f);
+        minSpread = std::min(minSpread, spread);
+        maxSpread = std::max(maxSpread, spread);
     }
 
-    // Should be very small difference between L and R
-    return expect(maxDiff < 0.1f,
-                  "Low band should remain mono when crossover is enabled: Max Diff=" + std::to_string(maxDiff));
+    ok &= expect(minSpread > 0.2f, "Width 100 should produce clearly non-mono spread across tested frequencies");
+    ok &= expect(maxSpread < minSpread * 1.75f,
+                 "Width response should stay reasonably consistent across tested frequencies");
+    return ok;
+}
+
+bool testParameterCountInProcessor() {
+    QuadraBassAudioProcessor processor;
+    return expect(processor.getParameters().size() == 5, "Processor should expose exactly five parameters");
+}
+
+bool testFIRModeProducesStableOutput() {
+    QuadraBassAudioProcessor processor;
+    processor.prepareToPlay(48000.0, 2048);
+
+    auto* widthParam = dynamic_cast<juce::AudioParameterFloat*>(
+        processor.params().apvts.getParameter(util::Params::IDs::widthPercent));
+    auto* modeParam = dynamic_cast<juce::AudioParameterChoice*>(
+        processor.params().apvts.getParameter(util::Params::IDs::hilbertMode));
+
+    bool ok = true;
+    if (modeParam == nullptr)
+        return expect(false, "hilbert_mode should be a choice parameter");
+
+    *widthParam = 100.0f;
+    modeParam->operator=(1); // FIR
+
+    juce::AudioBuffer<float> buffer(2, 2048);
+    juce::MidiBuffer midi;
+    int sampleOffset = 0;
+    for (int block = 0; block < 4; ++block) {
+        for (int i = 0; i < 2048; ++i) {
+            float val = std::sin(2.0f * 3.14159f * 1000.0f * (sampleOffset + i) / 48000.0f);
+            buffer.setSample(0, i, val);
+            buffer.setSample(1, i, val);
+        }
+        processor.processBlock(buffer, midi);
+        sampleOffset += 2048;
+    }
+
+    ok &= expect(processor.getLatencySamples() > 0, "FIR mode should report non-zero plugin latency");
+
+    float sumSq = 0.0f;
+    float diffSq = 0.0f;
+    auto* L = buffer.getReadPointer(0);
+    auto* R = buffer.getReadPointer(1);
+    for (int i = 0; i < 2048; ++i) {
+        ok &= expect(std::isfinite(L[i]) && std::isfinite(R[i]), "FIR mode output must be finite");
+        sumSq += L[i] * L[i];
+        float d = L[i] - R[i];
+        diffSq += d * d;
+    }
+
+    const float outRms = std::sqrt(sumSq / 2048.0f);
+    const float spreadRms = std::sqrt(diffSq / 2048.0f);
+    ok &= expect(outRms > 0.01f, "FIR mode output RMS should remain non-trivial");
+    ok &= expect(spreadRms > 0.05f, "FIR mode should still produce widening at width 100");
+    return ok;
 }
 
 } // namespace
@@ -104,7 +176,10 @@ bool testLowBandMonoIntegrity() {
 int main() {
     bool ok = true;
     ok &= testStereoFolddown();
-    ok &= testLowBandMonoIntegrity();
+    ok &= testWidthZeroIsMonoAcrossBand();
+    ok &= testWidthConsistencyAcrossFrequencies();
+    ok &= testParameterCountInProcessor();
+    ok &= testFIRModeProducesStableOutput();
 
     if (!ok)
         return 1;

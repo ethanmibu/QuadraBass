@@ -1,8 +1,8 @@
 #include "PluginEditor.h"
 #include "util/Params.h"
 
-QuadraBassAudioProcessorEditor::QuadraBassAudioProcessorEditor(QuadraBassAudioProcessor& processor)
-    : AudioProcessorEditor(processor), audioProcessor_(processor) {
+QuadraBassAudioProcessorEditor::QuadraBassAudioProcessorEditor(QuadraBassAudioProcessor& proc)
+    : AudioProcessorEditor(proc), audioProcessor_(proc) {
 
     audioProcessor_.activeGoniometer_.store(&goniometer_, std::memory_order_relaxed);
     audioProcessor_.activeCorrelationMeter_.store(&correlationMeter_, std::memory_order_relaxed);
@@ -14,6 +14,18 @@ QuadraBassAudioProcessorEditor::QuadraBassAudioProcessorEditor(QuadraBassAudioPr
 
     addAndMakeVisible(goniometer_);
     addAndMakeVisible(correlationMeter_);
+
+    hilbertModeLabel_.setText("Mode", juce::dontSendNotification);
+    hilbertModeLabel_.setJustificationType(juce::Justification::centredRight);
+    hilbertModeLabel_.setColour(juce::Label::textColourId, juce::Colour::fromRGB(192, 205, 220));
+    addAndMakeVisible(hilbertModeLabel_);
+
+    hilbertModeBox_.addItem("IIR", 1);
+    hilbertModeBox_.addItem("FIR", 2);
+    hilbertModeBox_.setColour(juce::ComboBox::backgroundColourId, juce::Colour::fromRGB(29, 35, 45));
+    hilbertModeBox_.setColour(juce::ComboBox::textColourId, juce::Colour::fromRGB(220, 230, 242));
+    hilbertModeBox_.setColour(juce::ComboBox::outlineColourId, juce::Colour::fromRGB(73, 94, 120));
+    addAndMakeVisible(hilbertModeBox_);
 
     auto setupSlider = [this](juce::Slider& slider, juce::Label& label, const juce::String& labelText) {
         slider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
@@ -28,14 +40,14 @@ QuadraBassAudioProcessorEditor::QuadraBassAudioProcessorEditor(QuadraBassAudioPr
         addAndMakeVisible(label);
     };
 
-    setupSlider(crossoverSlider_, crossoverLabel_, "Crossover");
     setupSlider(widthSlider_, widthLabel_, "Width");
     setupSlider(phaseAngleSlider_, phaseAngleLabel_, "Phase Angle");
     setupSlider(phaseRotationSlider_, phaseRotationLabel_, "Phase Rotation");
     setupSlider(gainSlider_, gainLabel_, "Gain");
 
     auto& apvts = audioProcessor_.params().apvts;
-    crossoverAttachment_ = std::make_unique<SliderAttachment>(apvts, util::Params::IDs::crossoverHz, crossoverSlider_);
+    hilbertModeAttachment_ =
+        std::make_unique<ComboBoxAttachment>(apvts, util::Params::IDs::hilbertMode, hilbertModeBox_);
     widthAttachment_ = std::make_unique<SliderAttachment>(apvts, util::Params::IDs::widthPercent, widthSlider_);
     phaseAngleAttachment_ =
         std::make_unique<SliderAttachment>(apvts, util::Params::IDs::phaseAngleDeg, phaseAngleSlider_);
@@ -64,7 +76,12 @@ void QuadraBassAudioProcessorEditor::paint(juce::Graphics& g) {
 
 void QuadraBassAudioProcessorEditor::resized() {
     const auto bounds = getLocalBounds().reduced(24);
-    title_.setBounds(bounds.getX() + 6, 20, bounds.getWidth() - 12, 40);
+    auto header = juce::Rectangle<int>(bounds.getX() + 6, 20, bounds.getWidth() - 12, 40);
+    title_.setBounds(header.removeFromLeft(240));
+
+    auto modeArea = header.removeFromRight(220);
+    hilbertModeLabel_.setBounds(modeArea.removeFromLeft(64));
+    hilbertModeBox_.setBounds(modeArea.reduced(0, 8));
 
     auto topArea = bounds.withTop(98).withHeight(178);
     auto meterArea = topArea.removeFromLeft(240).reduced(8);
@@ -75,14 +92,13 @@ void QuadraBassAudioProcessorEditor::resized() {
     correlationMeter_.setBounds(meterArea);
 
     auto knobsArea = topArea.reduced(6);
-    const int knobWidth = knobsArea.getWidth() / 5;
+    const int knobWidth = knobsArea.getWidth() / 4;
 
     auto placeKnob = [](juce::Rectangle<int> area, juce::Slider& slider, juce::Label& label) {
         label.setBounds(area.removeFromTop(18));
         slider.setBounds(area.reduced(6));
     };
 
-    placeKnob(knobsArea.removeFromLeft(knobWidth), crossoverSlider_, crossoverLabel_);
     placeKnob(knobsArea.removeFromLeft(knobWidth), widthSlider_, widthLabel_);
     placeKnob(knobsArea.removeFromLeft(knobWidth), phaseAngleSlider_, phaseAngleLabel_);
     placeKnob(knobsArea.removeFromLeft(knobWidth), phaseRotationSlider_, phaseRotationLabel_);

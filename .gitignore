@@ -67,3 +67,11 @@ cmake-build-relwithdebinfo/
 
 # JUCE intermediates
 JuceLibraryCode/
+
+# Agent/planning/documentation artifacts
+AGENTS.md
+docs/
+
+# Canonical project docs that remain tracked
+!README.md
+!CHANGELOG.md

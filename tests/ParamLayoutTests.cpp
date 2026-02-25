@@ -52,13 +52,13 @@ bool testParameterIdsExist() {
     util::Params params(processor);
 
     bool ok = true;
-    ok &= expect(params.apvts.getParameter("crossover_enabled") != nullptr, "Missing crossover_enabled");
-    ok &= expect(params.apvts.getParameter(util::Params::IDs::crossoverHz) != nullptr, "Missing crossover_hz");
     ok &= expect(params.apvts.getParameter(util::Params::IDs::widthPercent) != nullptr, "Missing width_percent");
+    ok &= expect(params.apvts.getParameter(util::Params::IDs::hilbertMode) != nullptr, "Missing hilbert_mode");
     ok &= expect(params.apvts.getParameter(util::Params::IDs::phaseAngleDeg) != nullptr, "Missing phase_angle_deg");
     ok &=
         expect(params.apvts.getParameter(util::Params::IDs::phaseRotationDeg) != nullptr, "Missing phase_rotation_deg");
     ok &= expect(params.apvts.getParameter(util::Params::IDs::outputGainDb) != nullptr, "Missing output_gain_db");
+    ok &= expect(processor.getParameters().size() == 5, "Expected exactly five plugin parameters");
     return ok;
 }
 
@@ -67,15 +67,13 @@ bool testDefaultValues() {
     util::Params params(processor);
 
     bool ok = true;
-    auto* ce = dynamic_cast<juce::AudioParameterBool*>(params.apvts.getParameter("crossover_enabled"));
-    if (ce) {
-        ok &= expect(ce->get() == true, "Default crossoverEnabled should be true");
-    } else {
-        ok &= expect(false, "crossover_enabled is not a bool parameter");
-    }
-
-    ok &= expect(isNear(params.getCrossoverHz(), 90.0f), "Default crossover should be 90 Hz");
     ok &= expect(isNear(params.getWidthPercent(), 0.0f), "Default width should be 0%");
+    auto* mode = dynamic_cast<juce::AudioParameterChoice*>(params.apvts.getParameter(util::Params::IDs::hilbertMode));
+    if (mode != nullptr) {
+        ok &= expect(mode->getIndex() == 0, "Default Hilbert mode should be IIR");
+    } else {
+        ok &= expect(false, "hilbert_mode is not a choice parameter");
+    }
     ok &= expect(isNear(params.getPhaseAngleDeg(), 90.0f), "Default phase angle should be 90 deg");
     ok &= expect(isNear(params.getPhaseRotationDeg(), 0.0f), "Default phase rotation should be 0 deg");
     ok &= expect(isNear(params.getOutputGainDb(), 0.0f), "Default gain should be 0 dB");
@@ -99,7 +97,6 @@ bool testParameterRanges() {
     };
 
     bool ok = true;
-    ok &= expectRange(util::Params::IDs::crossoverHz, 20.0f, 500.0f);
     ok &= expectRange(util::Params::IDs::widthPercent, 0.0f, 100.0f);
     ok &= expectRange(util::Params::IDs::phaseAngleDeg, 0.0f, 180.0f);
     ok &= expectRange(util::Params::IDs::phaseRotationDeg, -180.0f, 180.0f);

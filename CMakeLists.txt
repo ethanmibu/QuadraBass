@@ -61,8 +61,6 @@ target_sources(QuadraBass PRIVATE
     src/PluginEditor.h
     src/util/Params.cpp
     src/util/Params.h
-    src/dsp/BandSplitProcessor.cpp
-    src/dsp/BandSplitProcessor.h
     src/dsp/HilbertQuadratureProcessor.cpp
     src/dsp/HilbertQuadratureProcessor.h
     src/dsp/StereoMatrixProcessor.cpp
@@ -93,6 +91,20 @@ target_link_libraries(QuadraBass PRIVATE
 )
 
 juce_generate_juce_header(QuadraBass)
+
+if (APPLE)
+    add_custom_command(TARGET QuadraBass_AU POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy
+            ${CMAKE_CURRENT_BINARY_DIR}/QuadraBass_artefacts/JuceLibraryCode/QuadraBass_AU/Info.plist
+            ${CMAKE_CURRENT_BINARY_DIR}/QuadraBass_artefacts/$<CONFIG>/AU/QuadraBass.component/Contents/Info.plist
+    )
+
+    add_custom_command(TARGET QuadraBass_VST3 POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy
+            ${CMAKE_CURRENT_BINARY_DIR}/QuadraBass_artefacts/JuceLibraryCode/QuadraBass_VST3/Info.plist
+            ${CMAKE_CURRENT_BINARY_DIR}/QuadraBass_artefacts/$<CONFIG>/VST3/QuadraBass.vst3/Contents/Info.plist
+    )
+endif()
 
 include(CTest)
 set(CTEST_OUTPUT_ON_FAILURE ON)
@@ -131,7 +143,6 @@ if (BUILD_TESTING)
 
     add_qb_test(InitTests tests/InitTests.cpp src/util/Params.cpp src/util/Params.h)
     add_qb_test(ParamLayout tests/ParamLayoutTests.cpp src/util/Params.cpp src/util/Params.h)
-    add_qb_test(BandSplitProcessor tests/BandSplitProcessorTests.cpp src/dsp/BandSplitProcessor.cpp src/dsp/BandSplitProcessor.h)
     add_qb_test(HilbertQuadrature tests/HilbertQuadratureTests.cpp src/dsp/HilbertQuadratureProcessor.cpp src/dsp/HilbertQuadratureProcessor.h)
     add_qb_test(StereoMatrix tests/StereoMatrixTests.cpp src/dsp/StereoMatrixProcessor.cpp src/dsp/StereoMatrixProcessor.h)
     add_qb_test(VisualizerMath tests/VisualizerMathTests.cpp src/ui/GoniometerComponent.cpp src/ui/GoniometerComponent.h src/ui/CorrelationMeter.cpp src/ui/CorrelationMeter.h)
@@ -139,7 +150,6 @@ if (BUILD_TESTING)
         src/PluginProcessor.cpp src/PluginProcessor.h 
         src/PluginEditor.cpp src/PluginEditor.h 
         src/util/Params.cpp src/util/Params.h 
-        src/dsp/BandSplitProcessor.cpp src/dsp/BandSplitProcessor.h 
         src/dsp/HilbertQuadratureProcessor.cpp src/dsp/HilbertQuadratureProcessor.h 
         src/dsp/StereoMatrixProcessor.cpp src/dsp/StereoMatrixProcessor.h 
         src/ui/GoniometerComponent.cpp src/ui/GoniometerComponent.h 

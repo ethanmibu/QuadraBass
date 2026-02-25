@@ -8,9 +8,8 @@ namespace util {
 class Params final {
   public:
     struct IDs {
-        static constexpr const char* crossoverEnabled = "crossover_enabled";
-        static constexpr const char* crossoverHz = "crossover_hz";
         static constexpr const char* widthPercent = "width_percent";
+        static constexpr const char* hilbertMode = "hilbert_mode";
         static constexpr const char* phaseAngleDeg = "phase_angle_deg";
         static constexpr const char* phaseRotationDeg = "phase_rotation_deg";
         static constexpr const char* outputGainDb = "output_gain_db";
@@ -20,9 +19,8 @@ class Params final {
 
     juce::AudioProcessorValueTreeState apvts;
 
-    bool getCrossoverEnabled() const noexcept;
-    float getCrossoverHz() const noexcept;
     float getWidthPercent() const noexcept;
+    int getHilbertModeIndex() const noexcept;
     float getPhaseAngleDeg() const noexcept;
     float getPhaseRotationDeg() const noexcept;
     float getOutputGainDb() const noexcept;
@@ -30,9 +28,8 @@ class Params final {
     static juce::AudioProcessorValueTreeState::ParameterLayout createLayout();
 
   private:
-    std::atomic<float>* crossoverEnabled_ = nullptr;
-    std::atomic<float>* crossoverHz_ = nullptr;
     std::atomic<float>* widthPercent_ = nullptr;
+    std::atomic<float>* hilbertMode_ = nullptr;
     std::atomic<float>* phaseAngleDeg_ = nullptr;
     std::atomic<float>* phaseRotationDeg_ = nullptr;
     std::atomic<float>* outputGainDb_ = nullptr;

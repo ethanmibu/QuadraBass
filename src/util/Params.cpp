@@ -3,31 +3,26 @@
 namespace util {
 
 Params::Params(juce::AudioProcessor& processor) : apvts(processor, nullptr, "PARAMS", createLayout()) {
-    crossoverEnabled_ = apvts.getRawParameterValue(IDs::crossoverEnabled);
-    crossoverHz_ = apvts.getRawParameterValue(IDs::crossoverHz);
     widthPercent_ = apvts.getRawParameterValue(IDs::widthPercent);
+    hilbertMode_ = apvts.getRawParameterValue(IDs::hilbertMode);
     phaseAngleDeg_ = apvts.getRawParameterValue(IDs::phaseAngleDeg);
     phaseRotationDeg_ = apvts.getRawParameterValue(IDs::phaseRotationDeg);
     outputGainDb_ = apvts.getRawParameterValue(IDs::outputGainDb);
 
-    jassert(crossoverEnabled_ != nullptr);
-    jassert(crossoverHz_ != nullptr);
     jassert(widthPercent_ != nullptr);
+    jassert(hilbertMode_ != nullptr);
     jassert(phaseAngleDeg_ != nullptr);
     jassert(phaseRotationDeg_ != nullptr);
     jassert(outputGainDb_ != nullptr);
 }
 
-bool Params::getCrossoverEnabled() const noexcept {
-    return crossoverEnabled_->load(std::memory_order_relaxed) >= 0.5f;
-}
-
-float Params::getCrossoverHz() const noexcept {
-    return crossoverHz_->load(std::memory_order_relaxed);
-}
-
 float Params::getWidthPercent() const noexcept {
     return widthPercent_->load(std::memory_order_relaxed);
+}
+
+int Params::getHilbertModeIndex() const noexcept {
+    const int idx = static_cast<int>(hilbertMode_->load(std::memory_order_relaxed));
+    return juce::jlimit(0, 1, idx);
 }
 
 float Params::getPhaseAngleDeg() const noexcept {
@@ -45,16 +40,11 @@ float Params::getOutputGainDb() const noexcept {
 juce::AudioProcessorValueTreeState::ParameterLayout Params::createLayout() {
     std::vector<std::unique_ptr<juce::RangedAudioParameter>> parameters;
 
-    parameters.push_back(
-        std::make_unique<juce::AudioParameterBool>(juce::ParameterID(IDs::crossoverEnabled, 1), "Crossover On", true));
-
-    juce::NormalisableRange<float> crossoverRange(20.0f, 500.0f, 0.01f);
-    crossoverRange.setSkewForCentre(100.0f);
-    parameters.push_back(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID(IDs::crossoverHz, 1),
-                                                                     "Crossover", crossoverRange, 90.0f));
-
     parameters.push_back(std::make_unique<juce::AudioParameterFloat>(
         juce::ParameterID(IDs::widthPercent, 1), "Width", juce::NormalisableRange<float>(0.0f, 100.0f, 0.01f), 0.0f));
+
+    parameters.push_back(std::make_unique<juce::AudioParameterChoice>(
+        juce::ParameterID(IDs::hilbertMode, 1), "Hilbert Mode", juce::StringArray{"IIR", "FIR"}, 0));
 
     parameters.push_back(
         std::make_unique<juce::AudioParameterFloat>(juce::ParameterID(IDs::phaseAngleDeg, 1), "Phase Angle",

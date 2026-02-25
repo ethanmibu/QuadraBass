@@ -65,20 +65,22 @@ void QuadraBassAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBl
     outputGain_.setRampDurationSeconds(0.02);
     outputGain_.setGainDecibels(params_.getOutputGainDb());
 
-    bandSplit_.prepare(processSpec_);
     hilbert_.prepare(processSpec_);
+    activeHilbertMode_ = params_.getHilbertModeIndex() == static_cast<int>(qbdsp::HilbertQuadratureProcessor::Mode::FIR)
+                             ? qbdsp::HilbertQuadratureProcessor::Mode::FIR
+                             : qbdsp::HilbertQuadratureProcessor::Mode::IIR;
+    hilbert_.setMode(activeHilbertMode_);
+    setLatencySamples(hilbert_.getLatencySamples());
     stereoMatrix_.prepare(processSpec_);
 
     const int bufferSize = juce::jmax(1, samplesPerBlock);
     monoBuffer_.setSize(1, bufferSize, false, true, true);
-    lowBuffer_.setSize(1, bufferSize, false, true, true);
     xHighBuffer_.setSize(1, bufferSize, false, true, true);
-    highBuffer_.setSize(1, bufferSize, false, true, true);
     qBuffer_.setSize(1, bufferSize, false, true, true);
+    zeroBuffer_.setSize(1, bufferSize, false, true, true);
 }
 
 void QuadraBassAudioProcessor::releaseResources() {
-    bandSplit_.reset();
     hilbert_.reset();
     stereoMatrix_.reset();
 }
@@ -115,24 +117,42 @@ void QuadraBassAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, ju
         return;
 
     monoBuffer_.setSize(1, samples, false, false, true);
-    lowBuffer_.setSize(1, samples, false, false, true);
     xHighBuffer_.setSize(1, samples, false, false, true);
-    highBuffer_.setSize(1, samples, false, false, true);
     qBuffer_.setSize(1, samples, false, false, true);
+    zeroBuffer_.setSize(1, samples, false, false, true);
+    zeroBuffer_.clear();
 
-    float* monoData = monoBuffer_.getWritePointer(0);
-    juce::FloatVectorOperations::clear(monoData, samples);
+    auto downmixToMono = [samples](const juce::AudioBuffer<float>& src, int srcChannels,
+                                   juce::AudioBuffer<float>& dst) noexcept {
+        float* monoData = dst.getWritePointer(0);
+        juce::FloatVectorOperations::clear(monoData, samples);
+        if (srcChannels <= 0)
+            return;
 
-    const float mixScale = 1.0f / static_cast<float>(totalNumInputChannels);
-    for (int channel = 0; channel < totalNumInputChannels; ++channel)
-        juce::FloatVectorOperations::addWithMultiply(monoData, buffer.getReadPointer(channel), mixScale, samples);
+        const float mixScale = 1.0f / static_cast<float>(srcChannels);
+        for (int ch = 0; ch < srcChannels; ++ch)
+            juce::FloatVectorOperations::addWithMultiply(monoData, src.getReadPointer(ch), mixScale, samples);
+    };
 
-    bandSplit_.process(monoBuffer_, lowBuffer_, highBuffer_, params_.getCrossoverHz(), params_.getCrossoverEnabled());
+    // Keep widening full-band so width behavior stays consistent across the spectrum.
+    downmixToMono(buffer, totalNumInputChannels, monoBuffer_);
 
-    xHighBuffer_.copyFrom(0, 0, highBuffer_, 0, 0, samples);
-    hilbert_.process(highBuffer_, qBuffer_, params_.getPhaseAngleDeg());
-    stereoMatrix_.process(lowBuffer_, xHighBuffer_, highBuffer_, qBuffer_, buffer, params_.getWidthPercent(),
+    const auto requestedMode = params_.getHilbertModeIndex() == static_cast<int>(qbdsp::HilbertQuadratureProcessor::Mode::FIR)
+                                   ? qbdsp::HilbertQuadratureProcessor::Mode::FIR
+                                   : qbdsp::HilbertQuadratureProcessor::Mode::IIR;
+    if (requestedMode != activeHilbertMode_) {
+        activeHilbertMode_ = requestedMode;
+        hilbert_.setMode(activeHilbertMode_);
+        setLatencySamples(hilbert_.getLatencySamples());
+    }
+
+    xHighBuffer_.copyFrom(0, 0, monoBuffer_, 0, 0, samples);
+    hilbert_.process(monoBuffer_, qBuffer_, params_.getPhaseAngleDeg());
+    stereoMatrix_.process(zeroBuffer_, xHighBuffer_, monoBuffer_, qBuffer_, buffer, params_.getWidthPercent(),
                           params_.getPhaseAngleDeg(), params_.getPhaseRotationDeg());
+
+    if (totalNumOutputChannels == 1 && buffer.getNumChannels() > 1)
+        buffer.clear(1, 0, samples);
 
     outputGain_.setGainDecibels(params_.getOutputGainDb());
     juce::dsp::AudioBlock<float> block(buffer);

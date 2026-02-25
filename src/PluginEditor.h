@@ -19,20 +19,21 @@ class QuadraBassAudioProcessorEditor final : public juce::AudioProcessorEditor {
     qbui::GoniometerComponent goniometer_;
     qbui::CorrelationMeter correlationMeter_;
 
-    juce::Slider crossoverSlider_;
+    juce::ComboBox hilbertModeBox_;
     juce::Slider widthSlider_;
     juce::Slider phaseAngleSlider_;
     juce::Slider phaseRotationSlider_;
     juce::Slider gainSlider_;
 
-    juce::Label crossoverLabel_;
+    juce::Label hilbertModeLabel_;
     juce::Label widthLabel_;
     juce::Label phaseAngleLabel_;
     juce::Label phaseRotationLabel_;
     juce::Label gainLabel_;
 
     using SliderAttachment = juce::AudioProcessorValueTreeState::SliderAttachment;
-    std::unique_ptr<SliderAttachment> crossoverAttachment_;
+    using ComboBoxAttachment = juce::AudioProcessorValueTreeState::ComboBoxAttachment;
+    std::unique_ptr<ComboBoxAttachment> hilbertModeAttachment_;
     std::unique_ptr<SliderAttachment> widthAttachment_;
     std::unique_ptr<SliderAttachment> phaseAngleAttachment_;
     std::unique_ptr<SliderAttachment> phaseRotationAttachment_;
