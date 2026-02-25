@@ -112,7 +112,8 @@ void HilbertQuadratureProcessor::process(juce::AudioBuffer<float>& iBuffer, juce
     processIIR(iBuffer, qBuffer);
 }
 
-void HilbertQuadratureProcessor::processIIR(juce::AudioBuffer<float>& iBuffer, juce::AudioBuffer<float>& qBuffer) noexcept {
+void HilbertQuadratureProcessor::processIIR(juce::AudioBuffer<float>& iBuffer,
+                                            juce::AudioBuffer<float>& qBuffer) noexcept {
     const int numSamples = iBuffer.getNumSamples();
     float* iData = iBuffer.getWritePointer(0);
     float* qData = qBuffer.getWritePointer(0);
@@ -140,7 +141,8 @@ void HilbertQuadratureProcessor::processIIR(juce::AudioBuffer<float>& iBuffer, j
     }
 }
 
-void HilbertQuadratureProcessor::processFIR(juce::AudioBuffer<float>& iBuffer, juce::AudioBuffer<float>& qBuffer) noexcept {
+void HilbertQuadratureProcessor::processFIR(juce::AudioBuffer<float>& iBuffer,
+                                            juce::AudioBuffer<float>& qBuffer) noexcept {
     const int numSamples = iBuffer.getNumSamples();
     float* iData = iBuffer.getWritePointer(0);
     float* qData = qBuffer.getWritePointer(0);

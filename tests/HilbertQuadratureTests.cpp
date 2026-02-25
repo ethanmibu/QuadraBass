@@ -41,8 +41,7 @@ ToneMetrics measureTone(qbdsp::HilbertQuadratureProcessor& processor, double sam
 
     const double omega = 2.0 * juce::MathConstants<double>::pi * static_cast<double>(freqHz) / sampleRate;
     const double tonePeriodSamples = sampleRate / std::max(1.0f, freqHz);
-    const int settleSamples =
-        processor.getLatencySamples() + static_cast<int>(std::ceil(2.0 * tonePeriodSamples));
+    const int settleSamples = processor.getLatencySamples() + static_cast<int>(std::ceil(2.0 * tonePeriodSamples));
     const int captureSamples = std::max(blockSize * 8, static_cast<int>(std::ceil(8.0 * tonePeriodSamples)));
 
     double phase = 0.0;
@@ -200,8 +199,7 @@ bool testFIRAccuracyTargets() {
         if (!(mainPhase95 <= 3.0 && mainPhaseMax <= 8.0 && mainMag95 <= 0.5 && mainMagMax <= 1.5 &&
               edgePhaseMax <= 12.0)) {
             std::cerr << "FIR stats @" << sampleRate << " Hz: phase95=" << mainPhase95 << " phaseMax=" << mainPhaseMax
-                      << " mag95=" << mainMag95 << " magMax=" << mainMagMax << " edgePhaseMax=" << edgePhaseMax
-                      << '\n';
+                      << " mag95=" << mainMag95 << " magMax=" << mainMagMax << " edgePhaseMax=" << edgePhaseMax << '\n';
         }
 
         ok &= expect(mainPhase95 <= 3.0, "FIR main-band phase error 95th percentile should be <= 3 deg");

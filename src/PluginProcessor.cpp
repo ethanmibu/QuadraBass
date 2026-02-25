@@ -137,9 +137,10 @@ void QuadraBassAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, ju
     // Keep widening full-band so width behavior stays consistent across the spectrum.
     downmixToMono(buffer, totalNumInputChannels, monoBuffer_);
 
-    const auto requestedMode = params_.getHilbertModeIndex() == static_cast<int>(qbdsp::HilbertQuadratureProcessor::Mode::FIR)
-                                   ? qbdsp::HilbertQuadratureProcessor::Mode::FIR
-                                   : qbdsp::HilbertQuadratureProcessor::Mode::IIR;
+    const auto requestedMode =
+        params_.getHilbertModeIndex() == static_cast<int>(qbdsp::HilbertQuadratureProcessor::Mode::FIR)
+            ? qbdsp::HilbertQuadratureProcessor::Mode::FIR
+            : qbdsp::HilbertQuadratureProcessor::Mode::IIR;
     if (requestedMode != activeHilbertMode_) {
         activeHilbertMode_ = requestedMode;
         hilbert_.setMode(activeHilbertMode_);
