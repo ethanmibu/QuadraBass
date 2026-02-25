@@ -10,6 +10,12 @@
 
 ---
 
+## Delivery Guidance
+
+- Execution rules and completion criteria are tracked in:
+  - `docs/plans/2026-02-25-quadrabass-phase2-timeline.md`
+- Follow that guide for sequencing, verification gates, and done criteria.
+
 ## Preconditions
 
 - Work in feature branch/worktree (not `main`).

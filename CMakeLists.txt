@@ -106,7 +106,10 @@ if (BUILD_TESTING)
             ${ARGN}
         )
 
-        target_include_directories(${test_name} PRIVATE src)
+        target_include_directories(${test_name} PRIVATE 
+            src
+            ${CMAKE_CURRENT_BINARY_DIR}/QuadraBass_artefacts/JuceLibraryCode
+        )
 
         target_compile_definitions(${test_name} PRIVATE
             JUCE_WEB_BROWSER=0
@@ -132,4 +135,13 @@ if (BUILD_TESTING)
     add_qb_test(HilbertQuadrature tests/HilbertQuadratureTests.cpp src/dsp/HilbertQuadratureProcessor.cpp src/dsp/HilbertQuadratureProcessor.h)
     add_qb_test(StereoMatrix tests/StereoMatrixTests.cpp src/dsp/StereoMatrixProcessor.cpp src/dsp/StereoMatrixProcessor.h)
     add_qb_test(VisualizerMath tests/VisualizerMathTests.cpp src/ui/GoniometerComponent.cpp src/ui/GoniometerComponent.h src/ui/CorrelationMeter.cpp src/ui/CorrelationMeter.h)
+    add_qb_test(DspCompliance tests/DspComplianceTests.cpp 
+        src/PluginProcessor.cpp src/PluginProcessor.h 
+        src/PluginEditor.cpp src/PluginEditor.h 
+        src/util/Params.cpp src/util/Params.h 
+        src/dsp/BandSplitProcessor.cpp src/dsp/BandSplitProcessor.h 
+        src/dsp/HilbertQuadratureProcessor.cpp src/dsp/HilbertQuadratureProcessor.h 
+        src/dsp/StereoMatrixProcessor.cpp src/dsp/StereoMatrixProcessor.h 
+        src/ui/GoniometerComponent.cpp src/ui/GoniometerComponent.h 
+        src/ui/CorrelationMeter.cpp src/ui/CorrelationMeter.h)
 endif()

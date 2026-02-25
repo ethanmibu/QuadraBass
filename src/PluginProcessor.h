@@ -55,5 +55,10 @@ class QuadraBassAudioProcessor final : public juce::AudioProcessor {
     juce::dsp::Gain<float> outputGain_;
     juce::dsp::ProcessSpec processSpec_{};
 
+  public:
+    std::atomic<void*> activeGoniometer_{nullptr};
+    std::atomic<void*> activeCorrelationMeter_{nullptr};
+
+  private:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(QuadraBassAudioProcessor)
 };

@@ -67,7 +67,7 @@ bool testDefaultValues() {
 
     bool ok = true;
     ok &= expect(isNear(params.getCrossoverHz(), 90.0f), "Default crossover should be 90 Hz");
-    ok &= expect(isNear(params.getWidthPercent(), 100.0f), "Default width should be 100%");
+    ok &= expect(isNear(params.getWidthPercent(), 0.0f), "Default width should be 0%");
     ok &= expect(isNear(params.getPhaseAngleDeg(), 90.0f), "Default phase angle should be 90 deg");
     ok &= expect(isNear(params.getPhaseRotationDeg(), 0.0f), "Default phase rotation should be 0 deg");
     ok &= expect(isNear(params.getOutputGainDb(), 0.0f), "Default gain should be 0 dB");

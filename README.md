@@ -4,7 +4,11 @@ Hilbert stereo widener plugin for bass sources, built with JUCE and CMake.
 
 ## Status
 
-Repository initialization scaffold. DSP and UI are placeholders pending implementation milestones.
+Phase 2 DSP development is in progress. Current architecture, execution plan, and completion guidance are documented in:
+
+- `docs/plans/2026-02-24-quadrabass-phase2-design.md`
+- `docs/plans/2026-02-24-quadrabass-phase2-implementation.md`
+- `docs/plans/2026-02-25-quadrabass-phase2-timeline.md`
 
 ## Target Formats
 

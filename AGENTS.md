@@ -9,6 +9,7 @@
 ## Spec Location
 - Phase 2 design: `docs/plans/2026-02-24-quadrabass-phase2-design.md`
 - Phase 2 implementation: `docs/plans/2026-02-24-quadrabass-phase2-implementation.md`
+- Phase 2 completion guide: `docs/plans/2026-02-25-quadrabass-phase2-timeline.md`
 
 ## DSP Guardrails (Phase 2)
 - Mono reference is average fold-down: `(L + R) / 2`.

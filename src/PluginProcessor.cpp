@@ -14,7 +14,7 @@ QuadraBassAudioProcessor::QuadraBassAudioProcessor()
 }
 
 const juce::String QuadraBassAudioProcessor::getName() const {
-    return JucePlugin_Name;
+    return "QuadraBass";
 }
 
 bool QuadraBassAudioProcessor::acceptsMidi() const {
@@ -138,6 +138,14 @@ void QuadraBassAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, ju
     juce::dsp::AudioBlock<float> block(buffer);
     juce::dsp::ProcessContextReplacing<float> context(block);
     outputGain_.process(context);
+
+    if (auto* gonio = static_cast<qbui::GoniometerComponent*>(activeGoniometer_.load(std::memory_order_relaxed)))
+        gonio->processBlock(buffer.getReadPointer(0),
+                            buffer.getNumChannels() > 1 ? buffer.getReadPointer(1) : buffer.getReadPointer(0), samples);
+
+    if (auto* corr = static_cast<qbui::CorrelationMeter*>(activeCorrelationMeter_.load(std::memory_order_relaxed)))
+        corr->processBlock(buffer.getReadPointer(0),
+                           buffer.getNumChannels() > 1 ? buffer.getReadPointer(1) : buffer.getReadPointer(0), samples);
 }
 
 bool QuadraBassAudioProcessor::hasEditor() const {
