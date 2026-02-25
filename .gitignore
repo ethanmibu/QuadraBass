@@ -70,7 +70,13 @@ JuceLibraryCode/
 
 # Agent/planning/documentation artifacts
 AGENTS.md
+**/AGENTS.md
+.codex/
 docs/
+docs/plans/
+*plan*.md
+*PLAN*.md
+memory.md
 
 # Canonical project docs that remain tracked
 !README.md

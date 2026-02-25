@@ -8,8 +8,8 @@ Current active goal: take mono program material and widen continuously from
 mono (`0%`) to near-full quadrature (`100%`) while keeping behavior consistent
 across the spectrum within defined tolerances.
 
-Current Hilbert implementation modes: `IIR` (default, low-latency all-pass
-cascade) and `FIR` (high-accuracy quadrature with reported latency).
+Current Hilbert implementation modes: `FIR` (default, high-accuracy quadrature
+with reported latency) and `IIR` (optional, low-latency all-pass cascade).
 
 Width behavior by mode:
 
@@ -23,37 +23,10 @@ Project documentation policy:
 - Feature behavior and usage notes belong in this `README.md`.
 - Change history belongs in `CHANGELOG.md`.
 
-## FIR/IIR Mode Plan (Implemented)
-
-This plan is only valid if mode switching does not materially change plugin
-functionality (width behavior, mono collapse, and compatibility checks).
-
-1. Lock current behavior as baseline:
-   - Capture IIR reference metrics from current compliance tests.
-   - Add explicit regression checks so the default path stays bit-stable enough.
-2. Add mode abstraction in DSP:
-   - Extend `HilbertQuadratureProcessor` with `Mode::IIR` and `Mode::FIR`.
-   - Keep default mode as `IIR` for backward compatibility.
-3. Implement FIR Hilbert branch:
-   - Add FIR odd-symmetric Hilbert coefficients and convolution state.
-   - Match branch gain as closely as practical to current output law.
-4. Handle latency safely:
-   - Report FIR latency via plugin latency APIs.
-   - Align I/Q paths so stereo matrix input contract is unchanged.
-5. Add non-breaking parameter/state support:
-   - Add a mode parameter with safe default to `IIR`.
-   - Ensure old presets/sessions load identically.
-6. Verify no functional regressions:
-   - Run full existing suite on both modes.
-   - Add cross-mode checks for width consistency and fold-down tolerance.
-7. Gate release:
-   - If FIR fails compatibility thresholds, keep FIR disabled/internal.
-   - Only expose switching in UI after all gates pass.
-
-Current implementation status:
+## Implementation Status
 
 - `Hilbert Mode` is user-facing in the plugin UI with `IIR` and `FIR` options.
-- Default mode remains `IIR` for backward compatibility with existing sessions.
+- Default mode is `FIR` for new plugin instances.
 - FIR mode reports plugin latency and aligns I/Q paths for consistent stereo
   matrix behavior.
 - Automated acceptance checks run for `44.1/48/96 kHz` and are part of the
@@ -71,8 +44,8 @@ Current implementation status:
   remains in `[-0.15, +0.15]` with cross-band std-dev `<= 0.08`.
 - Mono collapse `(L+R)/2`: `<= +/-1.0 dB` error in `40 Hz .. 12 kHz`,
   relaxed to `<= +/-2.0 dB` above that.
-- Mode-switch compatibility: `IIR` remains default and backward-compatible with
-  existing sessions.
+- Mode-switch compatibility: `IIR` remains available; saved sessions keep their
+  stored mode value.
 
 ## Target Formats
 

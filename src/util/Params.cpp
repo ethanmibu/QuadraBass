@@ -44,7 +44,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout Params::createLayout() {
         juce::ParameterID(IDs::widthPercent, 1), "Width", juce::NormalisableRange<float>(0.0f, 100.0f, 0.01f), 0.0f));
 
     parameters.push_back(std::make_unique<juce::AudioParameterChoice>(
-        juce::ParameterID(IDs::hilbertMode, 1), "Hilbert Mode", juce::StringArray{"IIR", "FIR"}, 0));
+        juce::ParameterID(IDs::hilbertMode, 1), "Hilbert Mode", juce::StringArray{"IIR", "FIR"}, 1));
 
     parameters.push_back(
         std::make_unique<juce::AudioParameterFloat>(juce::ParameterID(IDs::phaseAngleDeg, 1), "Phase Angle",

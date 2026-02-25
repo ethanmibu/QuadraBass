@@ -70,7 +70,7 @@ bool testDefaultValues() {
     ok &= expect(isNear(params.getWidthPercent(), 0.0f), "Default width should be 0%");
     auto* mode = dynamic_cast<juce::AudioParameterChoice*>(params.apvts.getParameter(util::Params::IDs::hilbertMode));
     if (mode != nullptr) {
-        ok &= expect(mode->getIndex() == 0, "Default Hilbert mode should be IIR");
+        ok &= expect(mode->getIndex() == 1, "Default Hilbert mode should be FIR");
     } else {
         ok &= expect(false, "hilbert_mode is not a choice parameter");
     }
