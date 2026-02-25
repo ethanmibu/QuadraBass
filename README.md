@@ -13,8 +13,8 @@ cascade) and `FIR` (high-accuracy quadrature with reported latency).
 
 Width behavior by mode:
 
-- `FIR`: uses a linear decorrelation width law and balanced stereo matrix
-  (including harmonic-rich content handling).
+- `FIR`: uses a deterministic phase-law width matrix (0..45 deg per side from
+  `0..100%`) with matched channel gain behavior.
 - `IIR`: keeps legacy low-latency behavior and is not held to the same
   decorrelation/channel-balance accuracy targets as FIR.
 

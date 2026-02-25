@@ -24,10 +24,10 @@ void StereoMatrixProcessor::process(const juce::AudioBuffer<float>& lowBuffer,
     const float gqLegacy = std::sqrt(w);
     const float gCompLegacy = 1.0f / std::sqrt(1.0f - 0.5f * w);
 
-    // FIR mode can target a stricter width law due predictable Hilbert behavior.
-    const float rhoFir = 1.0f - w;
-    const float gmFir = std::sqrt(0.5f * (1.0f + rhoFir));
-    const float gsFir = std::sqrt(0.5f * (1.0f - rhoFir));
+    // FIR width law: 0..45 degree per-side phase rotation equivalent.
+    const float firPhase = juce::MathConstants<float>::pi * 0.25f * w;
+    const float gmFir = std::cos(firPhase);
+    const float gsFir = std::sin(firPhase);
 
     float angleDiffRad = (phaseAngleDeg - 90.0f) * juce::MathConstants<float>::pi / 180.0f;
     float theta = angleDiffRad * 0.5f;
@@ -43,27 +43,6 @@ void StereoMatrixProcessor::process(const juce::AudioBuffer<float>& lowBuffer,
     const float* iData = iBuffer.getReadPointer(0);
     const float* qData = qBuffer.getReadPointer(0);
 
-    double sumI2 = 0.0;
-    double sumQ2 = 0.0;
-    double sumIQ = 0.0;
-    if (useFirLinearWidthLaw) {
-        // Orthogonalize side against mid per block so harmonic-rich content still
-        // yields balanced L/R energy with imperfect quadrature.
-        for (int s = 0; s < samples; ++s) {
-            const double I = iBuffer.getNumChannels() > 0 ? static_cast<double>(iData[s]) : 0.0;
-            const double Q = qBuffer.getNumChannels() > 0 ? static_cast<double>(qData[s]) : 0.0;
-            sumI2 += I * I;
-            sumQ2 += Q * Q;
-            sumIQ += I * Q;
-        }
-    }
-
-    const double eps = 1.0e-12;
-    const float qProjOnI = useFirLinearWidthLaw ? static_cast<float>(sumIQ / std::max(sumI2, eps)) : 0.0f;
-    const double sumS2 = sumQ2 - 2.0 * static_cast<double>(qProjOnI) * sumIQ +
-                         static_cast<double>(qProjOnI) * static_cast<double>(qProjOnI) * sumI2;
-    const float sideNorm = useFirLinearWidthLaw && sumS2 > eps ? static_cast<float>(std::sqrt(sumI2 / sumS2)) : 1.0f;
-
     float* left = outputBuffer.getWritePointer(0);
     float* right = numOutChannels > 1 ? outputBuffer.getWritePointer(1) : nullptr;
 
@@ -77,9 +56,8 @@ void StereoMatrixProcessor::process(const juce::AudioBuffer<float>& lowBuffer,
         float rh = 0.0f;
 
         if (useFirLinearWidthLaw) {
-            const float S = (Q - qProjOnI * I) * sideNorm;
-            lh = gmFir * I + gsFir * S;
-            rh = gmFir * I - gsFir * S;
+            lh = gmFir * I + gsFir * Q;
+            rh = gmFir * I - gsFir * Q;
         } else {
             lh = gCompLegacy * (gmLegacy * xHigh + gqLegacy * I);
             rh = gCompLegacy * (gmLegacy * xHigh + gqLegacy * Q);

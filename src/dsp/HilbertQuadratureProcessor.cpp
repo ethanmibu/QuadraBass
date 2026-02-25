@@ -37,23 +37,37 @@ void HilbertQuadratureProcessor::designFIR(double sampleRate) {
         firCoeffs_[static_cast<size_t>(d)] = static_cast<float>(base * blackman);
     }
 
-    // Normalize around the middle of the useful band to keep FIR/Q gain close to I path.
-    constexpr double omegaRef = juce::MathConstants<double>::pi * 0.25;
-    double real = 0.0;
-    double imag = 0.0;
-    for (int d = 0; d < firTapCount_; ++d) {
-        const double c = static_cast<double>(firCoeffs_[static_cast<size_t>(d)]);
-        const double angle = omegaRef * static_cast<double>(d);
-        real += c * std::cos(angle);
-        imag -= c * std::sin(angle);
+    // Least-squares passband normalization (do not force DC/Nyquist).
+    const double sampleRateSafe = sampleRate > 1.0 ? sampleRate : 48000.0;
+    const double minFn = 30.0 / sampleRateSafe; // cycles/sample, avoid DC singular behavior
+    const double maxFn = 0.45 * 0.5;            // 0.45 * Nyquist (in cycles/sample)
+    constexpr int kNormBins = 512;
+
+    double sumMag = 0.0;
+    double sumMag2 = 0.0;
+    for (int k = 0; k < kNormBins; ++k) {
+        const double u = static_cast<double>(k) / static_cast<double>(kNormBins - 1);
+        const double fn = minFn + (maxFn - minFn) * u;
+        const double omega = juce::MathConstants<double>::twoPi * fn;
+
+        double real = 0.0;
+        double imag = 0.0;
+        for (int d = 0; d < firTapCount_; ++d) {
+            const double c = static_cast<double>(firCoeffs_[static_cast<size_t>(d)]);
+            const double angle = omega * static_cast<double>(d);
+            real += c * std::cos(angle);
+            imag -= c * std::sin(angle);
+        }
+
+        const double mag = std::hypot(real, imag);
+        sumMag += mag;
+        sumMag2 += mag * mag;
     }
 
-    const double mag = std::sqrt(real * real + imag * imag);
-    if (mag > 1.0e-12) {
-        const float scale = static_cast<float>(1.0 / mag);
-        for (int d = 0; d < firTapCount_; ++d)
-            firCoeffs_[static_cast<size_t>(d)] *= scale;
-    }
+    const double scale = sumMag2 > 1.0e-12 ? (sumMag / sumMag2) : 1.0;
+    const float fScale = static_cast<float>(scale);
+    for (int d = 0; d < firTapCount_; ++d)
+        firCoeffs_[static_cast<size_t>(d)] *= fScale;
 }
 
 void HilbertQuadratureProcessor::prepare(const juce::dsp::ProcessSpec& spec) {

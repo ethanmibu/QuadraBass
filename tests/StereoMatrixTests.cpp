@@ -85,7 +85,7 @@ bool testSymmetricWidthAtNinetyDegrees() {
 
     ok &= expect(s0.corr > s50.corr + 0.05f, "Correlation should decrease from width 0 to 50");
     ok &= expect(s50.corr > s100.corr + 0.05f, "Correlation should decrease from width 50 to 100");
-    ok &= expect(std::abs(s50.corr - 0.5f) < 0.15f, "Width 50 should target roughly 0.5 correlation");
+    ok &= expect(std::abs(s50.corr - 0.7071f) < 0.12f, "Width 50 should target roughly cos(45deg) correlation");
     ok &= expect(std::abs(s100.corr) < 0.15f, "Width 100 should be near decorrelated");
     ok &= expect(levelDiffDb < 0.1f, "Symmetric matrix should keep L/R levels matched");
 

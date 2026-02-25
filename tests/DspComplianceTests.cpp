@@ -211,9 +211,10 @@ bool testWidthConsistencyAcrossFrequencies() {
 bool testWidthMapsToLinearCorrelationOnSine() {
     bool ok = true;
 
-    constexpr int modeIndex = 1; // FIR-only linear decorrelation contract
-    const double tolMid = 0.18;
+    constexpr int modeIndex = 1; // FIR-only deterministic phase-law contract
+    const double tolMid = 0.14;
     const double tolWide = 0.20;
+    const double expectedMidCorr = std::cos(juce::MathConstants<double>::pi * 0.25);
 
     for (float freq : {60.0f, 250.0f, 1000.0f, 4000.0f, 10000.0f}) {
         const auto s0 = runSignalThroughProcessor(SignalKind::Sine, freq, 0.0f, modeIndex);
@@ -226,8 +227,8 @@ bool testWidthMapsToLinearCorrelationOnSine() {
                      "FIR correlation should decrease from 0 to 50 width. freq=" + std::to_string(freq));
         ok &= expect(s50.correlation > s100.correlation + 0.05,
                      "FIR correlation should decrease from 50 to 100 width. freq=" + std::to_string(freq));
-        ok &= expect(std::abs(s50.correlation - 0.5) < tolMid,
-                     "FIR width 50 correlation should track linear target. freq=" + std::to_string(freq));
+        ok &= expect(std::abs(s50.correlation - expectedMidCorr) < tolMid,
+                     "FIR width 50 correlation should track phase-law target. freq=" + std::to_string(freq));
         ok &= expect(std::abs(s100.correlation) < tolWide,
                      "FIR width 100 correlation should approach decorrelated target. freq=" + std::to_string(freq));
     }
