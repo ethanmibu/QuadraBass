@@ -11,7 +11,7 @@ class StereoMatrixProcessor final {
     void process(const juce::AudioBuffer<float>& lowBuffer, const juce::AudioBuffer<float>& xHighBuffer,
                  const juce::AudioBuffer<float>& iBuffer, const juce::AudioBuffer<float>& qBuffer,
                  juce::AudioBuffer<float>& outputBuffer, float widthPercent, float phaseAngleDeg,
-                 float phaseRotationDeg) const noexcept;
+                 float phaseRotationDeg, bool useFirLinearWidthLaw) const noexcept;
 
   private:
     juce::dsp::ProcessSpec spec_{};

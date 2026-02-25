@@ -11,71 +11,83 @@ bool expect(bool condition, const std::string& message) {
     return false;
 }
 
-bool testStereoMatrixFolddown() {
+struct BasicStats {
+    float leftRms = 0.0f;
+    float rightRms = 0.0f;
+    float corr = 0.0f;
+    float diffRms = 0.0f;
+};
+
+BasicStats measureStats(const juce::AudioBuffer<float>& output) {
+    const int samples = output.getNumSamples();
+    const float* left = output.getReadPointer(0);
+    const float* right = output.getReadPointer(1);
+
+    double sumL2 = 0.0;
+    double sumR2 = 0.0;
+    double sumLR = 0.0;
+    double sumD2 = 0.0;
+
+    for (int i = 0; i < samples; ++i) {
+        const double L = static_cast<double>(left[i]);
+        const double R = static_cast<double>(right[i]);
+        const double d = L - R;
+        sumL2 += L * L;
+        sumR2 += R * R;
+        sumLR += L * R;
+        sumD2 += d * d;
+    }
+
+    BasicStats stats;
+    const double n = static_cast<double>(samples);
+    stats.leftRms = static_cast<float>(std::sqrt(sumL2 / n));
+    stats.rightRms = static_cast<float>(std::sqrt(sumR2 / n));
+    stats.diffRms = static_cast<float>(std::sqrt(sumD2 / n));
+
+    const double denom = std::sqrt(sumL2 * sumR2);
+    stats.corr = denom > 1.0e-12 ? static_cast<float>(sumLR / denom) : 0.0f;
+    return stats;
+}
+
+bool testSymmetricWidthAtNinetyDegrees() {
     qbdsp::StereoMatrixProcessor processor;
-    juce::dsp::ProcessSpec spec{48000.0, 512, 2};
+    juce::dsp::ProcessSpec spec{48000.0, 2048, 2};
     processor.prepare(spec);
 
-    juce::AudioBuffer<float> lowBuffer(1, 512);
-    juce::AudioBuffer<float> xHighBuffer(1, 512);
-    juce::AudioBuffer<float> iBuffer(1, 512);
-    juce::AudioBuffer<float> qBuffer(1, 512);
-    juce::AudioBuffer<float> outputBuffer(2, 512);
+    juce::AudioBuffer<float> lowBuffer(1, 2048);
+    juce::AudioBuffer<float> xHighBuffer(1, 2048);
+    juce::AudioBuffer<float> iBuffer(1, 2048);
+    juce::AudioBuffer<float> qBuffer(1, 2048);
+    juce::AudioBuffer<float> output(2, 2048);
 
-    // Default width 0
-    for (int i = 0; i < 512; ++i) {
-        lowBuffer.setSample(0, i, 0.5f);
-        xHighBuffer.setSample(0, i, 0.5f);
-        iBuffer.setSample(0, i, 0.5f);
-        qBuffer.setSample(0, i, 0.5f);
+    for (int i = 0; i < 2048; ++i) {
+        const float phase = 2.0f * juce::MathConstants<float>::pi * 1000.0f * i / 48000.0f;
+        lowBuffer.setSample(0, i, 0.0f);
+        xHighBuffer.setSample(0, i, 0.0f);
+        iBuffer.setSample(0, i, std::sin(phase));
+        qBuffer.setSample(0, i, std::cos(phase));
     }
 
-    processor.process(lowBuffer, xHighBuffer, iBuffer, qBuffer, outputBuffer, 0.0f, 90.0f, 0.0f);
+    processor.process(lowBuffer, xHighBuffer, iBuffer, qBuffer, output, 0.0f, 90.0f, 0.0f, true);
+    const auto s0 = measureStats(output);
 
-    float sumLeft = 0.0f;
-    float sumRight = 0.0f;
-    for (int i = 0; i < 512; ++i) {
-        sumLeft += outputBuffer.getSample(0, i);
-        sumRight += outputBuffer.getSample(1, i);
-    }
+    bool ok = true;
+    ok &= expect(s0.diffRms < 1.0e-4f, "Width 0 should produce mono output");
+    ok &= expect(s0.corr > 0.99f, "Width 0 correlation should be near +1");
 
-    bool ok = expect(std::abs(sumLeft - sumRight) < 1e-4f, "Left and Right should be equal for 0% width");
+    processor.process(lowBuffer, xHighBuffer, iBuffer, qBuffer, output, 50.0f, 90.0f, 0.0f, true);
+    const auto s50 = measureStats(output);
 
-    // Width 100 with quadrature signals representing an allpass shifted version of xHigh
-    float originalMonoRms = 0.0f;
-    for (int i = 0; i < 512; ++i) {
-        float low = std::sin(2.0f * 3.14159f * 40.0f * i / 48000.0f);     // 40 Hz low
-        float xHigh = std::sin(2.0f * 3.14159f * 1000.0f * i / 48000.0f); // 1 kHz original high
-        // I and Q are phase shifted from xHigh. Say I is +45 and Q is -45 degrees respectively.
-        float I = std::sin(2.0f * 3.14159f * 1000.0f * i / 48000.0f + 3.14159f / 4.0f);
-        float Q = std::sin(2.0f * 3.14159f * 1000.0f * i / 48000.0f - 3.14159f / 4.0f);
+    processor.process(lowBuffer, xHighBuffer, iBuffer, qBuffer, output, 100.0f, 90.0f, 0.0f, true);
+    const auto s100 = measureStats(output);
 
-        lowBuffer.setSample(0, i, low);
-        xHighBuffer.setSample(0, i, xHigh);
-        iBuffer.setSample(0, i, I);
-        qBuffer.setSample(0, i, Q);
+    const float levelDiffDb = std::abs(20.0f * std::log10((s100.leftRms + 1.0e-12f) / (s100.rightRms + 1.0e-12f)));
 
-        float monoInput = low + xHigh;
-        originalMonoRms += monoInput * monoInput;
-    }
-    originalMonoRms = std::sqrt(originalMonoRms / 512.0f);
-
-    processor.process(lowBuffer, xHighBuffer, iBuffer, qBuffer, outputBuffer, 100.0f, 90.0f, 0.0f);
-
-    float folddownRms = 0.0f;
-    for (int i = 0; i < 512; ++i) {
-        float l = outputBuffer.getSample(0, i);
-        float r = outputBuffer.getSample(1, i);
-        float mono = (l + r) * 0.5f;
-        folddownRms += mono * mono;
-    }
-    folddownRms = std::sqrt(folddownRms / 512.0f);
-
-    // Check if the RMS difference is within 1.0 dB (~12%)
-    float ratio = folddownRms / originalMonoRms;
-    std::cout << "Original Mono RMS: " << originalMonoRms << ", Folddown RMS: " << folddownRms << " Ratio: " << ratio
-              << "\n";
-    ok &= expect(ratio > 0.88f && ratio < 1.12f, "Fold-down should remain close to original mono RMS at 100% width");
+    ok &= expect(s0.corr > s50.corr + 0.05f, "Correlation should decrease from width 0 to 50");
+    ok &= expect(s50.corr > s100.corr + 0.05f, "Correlation should decrease from width 50 to 100");
+    ok &= expect(std::abs(s50.corr - 0.5f) < 0.15f, "Width 50 should target roughly 0.5 correlation");
+    ok &= expect(std::abs(s100.corr) < 0.15f, "Width 100 should be near decorrelated");
+    ok &= expect(levelDiffDb < 0.1f, "Symmetric matrix should keep L/R levels matched");
 
     return ok;
 }
@@ -84,7 +96,7 @@ bool testStereoMatrixFolddown() {
 
 int main() {
     bool ok = true;
-    ok &= testStereoMatrixFolddown();
+    ok &= testSymmetricWidthAtNinetyDegrees();
 
     if (!ok)
         return 1;

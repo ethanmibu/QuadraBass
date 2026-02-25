@@ -150,7 +150,8 @@ void QuadraBassAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, ju
     xHighBuffer_.copyFrom(0, 0, monoBuffer_, 0, 0, samples);
     hilbert_.process(monoBuffer_, qBuffer_, params_.getPhaseAngleDeg());
     stereoMatrix_.process(zeroBuffer_, xHighBuffer_, monoBuffer_, qBuffer_, buffer, params_.getWidthPercent(),
-                          params_.getPhaseAngleDeg(), params_.getPhaseRotationDeg());
+                          params_.getPhaseAngleDeg(), params_.getPhaseRotationDeg(),
+                          activeHilbertMode_ == qbdsp::HilbertQuadratureProcessor::Mode::FIR);
 
     if (totalNumOutputChannels == 1 && buffer.getNumChannels() > 1)
         buffer.clear(1, 0, samples);

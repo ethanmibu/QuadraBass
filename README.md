@@ -11,6 +11,13 @@ across the spectrum within defined tolerances.
 Current Hilbert implementation modes: `IIR` (default, low-latency all-pass
 cascade) and `FIR` (high-accuracy quadrature with reported latency).
 
+Width behavior by mode:
+
+- `FIR`: uses a linear decorrelation width law and balanced stereo matrix
+  (including harmonic-rich content handling).
+- `IIR`: keeps legacy low-latency behavior and is not held to the same
+  decorrelation/channel-balance accuracy targets as FIR.
+
 Project documentation policy:
 
 - Feature behavior and usage notes belong in this `README.md`.

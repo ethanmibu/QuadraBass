@@ -12,3 +12,6 @@ All notable feature and behavior changes are recorded here.
 - Added FIR latency reporting and cross-sample-rate FIR acceptance tests.
 - Fixed AU/VST3 bundle packaging to always include `Contents/Info.plist`
   so hosts can reliably discover rebuilt plugins.
+- Updated width matrix so strict linear decorrelation and channel-balance
+  behavior applies to `FIR` mode; `IIR` keeps legacy low-latency behavior.
+- Added harmonic-rich (`square`/`saw`) compliance coverage for FIR width behavior.
