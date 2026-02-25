@@ -101,8 +101,7 @@ if (BUILD_TESTING)
     macro(add_qb_test test_name src_file)
         add_executable(${test_name}
             ${src_file}
-            src/util/Params.cpp
-            src/util/Params.h
+            ${ARGN}
         )
 
         target_include_directories(${test_name} PRIVATE src)
@@ -115,6 +114,7 @@ if (BUILD_TESTING)
 
         target_link_libraries(${test_name} PRIVATE
             juce::juce_audio_processors
+            juce::juce_dsp
             juce::juce_recommended_config_flags
             juce::juce_recommended_lto_flags
             juce::juce_recommended_warning_flags
@@ -124,6 +124,7 @@ if (BUILD_TESTING)
         add_dependencies(quadrabass_tests ${test_name})
     endmacro()
 
-    add_qb_test(InitTests tests/InitTests.cpp)
-    add_qb_test(ParamLayout tests/ParamLayoutTests.cpp)
+    add_qb_test(InitTests tests/InitTests.cpp src/util/Params.cpp src/util/Params.h)
+    add_qb_test(ParamLayout tests/ParamLayoutTests.cpp src/util/Params.cpp src/util/Params.h)
+    add_qb_test(BandSplitProcessor tests/BandSplitProcessorTests.cpp src/dsp/BandSplitProcessor.cpp src/dsp/BandSplitProcessor.h)
 endif()
